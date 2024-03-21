@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>6.4</version>
+    <media_types>
+        <media_type>
+            <name>MS Teams (via Logic Apps)</name>
+            <type>WEBHOOK</type>
+            <parameters>
+                <parameter>
+                    <name>event_id</name>
+                    <value>{EVENT.ID}</value>
+                </parameter>
+                <parameter>
+                    <name>message</name>
+                    <value>{ALERT.MESSAGE}</value>
+                </parameter>
+                <parameter>
+                    <name>post_url</name>
+                    <value></value>
+                </parameter>
+                <parameter>
+                    <name>subject</name>
+                    <value>{ALERT.SUBJECT}</value>
+                </parameter>
+            </parameters>
+            <script>try {
+Zabbix.log(4, value);
+  var params = JSON.parse(value);
+
+/*
+  var req = new CurlHttpRequest();
+  req.AddHeader('Content-Type: application/json');
+  resp = req.Post(params.PostURL, JSON.stringify(data));
+  return JSON.stringify(JSON.parse(resp));
+*/
+  var req = new HttpRequest();
+  req.addHeader('Content-Type: application/json');
+
+  var resp = req.post(params.post_url, JSON.stringify({ event_id: params.event_id, subject: params.subject, message: params.message }));
+  var status = req.getStatus();
+
+  if (status &lt; 300) {
+    return 'OK';
+  } else {
+    throw { status: status, response: resp};
+  }
+} catch (error) {
+  Zabbix.log(2, '[ MS Teams Webhook ] Error : ' + JSON.stringify(error));
+
+  throw 'Failed with error: ' + error.status;
+}</script>
+            <message_templates>
+                <message_template>
+                    <event_source>TRIGGERS</event_source>
+                    <operation_mode>PROBLEM</operation_mode>
+                    <subject>Problem: {EVENT.NAME}</subject>
+                    <message>Problem started at {EVENT.TIME} on {EVENT.DATE}
+Problem name: {EVENT.NAME}
+Host: {HOST.NAME}
+Severity: {EVENT.SEVERITY}
+Operational data: {EVENT.OPDATA}
+Original problem ID: {EVENT.ID}
+{TRIGGER.URL}</message>
+                </message_template>
+                <message_template>
+                    <event_source>TRIGGERS</event_source>
+                    <operation_mode>RECOVERY</operation_mode>
+                    <subject>Resolved in {EVENT.DURATION}: {EVENT.NAME}</subject>
+                    <message>Problem has been resolved at {EVENT.RECOVERY.TIME} on {EVENT.RECOVERY.DATE}
+Problem name: {EVENT.NAME}
+Problem duration: {EVENT.DURATION}
+Host: {HOST.NAME}
+Severity: {EVENT.SEVERITY}
+Original problem ID: {EVENT.ID}
+{TRIGGER.URL}</message>
+                </message_template>
+                <message_template>
+                    <event_source>TRIGGERS</event_source>
+                    <operation_mode>UPDATE</operation_mode>
+                    <subject>Updated problem in {EVENT.AGE}: {EVENT.NAME}</subject>
+                    <message>{USER.FULLNAME} {EVENT.UPDATE.ACTION} problem at {EVENT.UPDATE.DATE} {EVENT.UPDATE.TIME}.
+{EVENT.UPDATE.MESSAGE}
+
+Current problem status is {EVENT.STATUS}, age is {EVENT.AGE}, acknowledged: {EVENT.ACK.STATUS}.</message>
+                </message_template>
+                <message_template>
+                    <event_source>DISCOVERY</event_source>
+                    <operation_mode>PROBLEM</operation_mode>
+                    <subject>Discovery: {DISCOVERY.DEVICE.STATUS} {DISCOVERY.DEVICE.IPADDRESS}</subject>
+                    <message>Discovery rule: {DISCOVERY.RULE.NAME}
+
+Device IP: {DISCOVERY.DEVICE.IPADDRESS}
+Device DNS: {DISCOVERY.DEVICE.DNS}
+Device status: {DISCOVERY.DEVICE.STATUS}
+Device uptime: {DISCOVERY.DEVICE.UPTIME}
+
+Device service name: {DISCOVERY.SERVICE.NAME}
+Device service port: {DISCOVERY.SERVICE.PORT}
+Device service status: {DISCOVERY.SERVICE.STATUS}
+Device service uptime: {DISCOVERY.SERVICE.UPTIME}</message>
+                </message_template>
+                <message_template>
+                    <event_source>AUTOREGISTRATION</event_source>
+                    <operation_mode>PROBLEM</operation_mode>
+                    <subject>Autoregistration: {HOST.HOST}</subject>
+                    <message>Host name: {HOST.HOST}
+Host IP: {HOST.IP}
+Agent port: {HOST.PORT}</message>
+                </message_template>
+                <message_template>
+                    <event_source>INTERNAL</event_source>
+                    <operation_mode>PROBLEM</operation_mode>
+                </message_template>
+                <message_template>
+                    <event_source>INTERNAL</event_source>
+                    <operation_mode>RECOVERY</operation_mode>
+                </message_template>
+            </message_templates>
+        </media_type>
+    </media_types>
+</zabbix_export>

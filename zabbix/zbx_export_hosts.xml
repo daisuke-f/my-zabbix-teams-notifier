@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>6.4</version>
+    <host_groups>
+        <host_group>
+            <uuid>dc579cd7a1a34222933f24f52a68bcd8</uuid>
+            <name>Linux servers</name>
+        </host_group>
+    </host_groups>
+    <hosts>
+        <host>
+            <host>Test Alert Host</host>
+            <name>Test Alert Host</name>
+            <groups>
+                <group>
+                    <name>Linux servers</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <name>int</name>
+                    <type>TRAP</type>
+                    <key>int</key>
+                    <delay>0</delay>
+                    <triggers>
+                        <trigger>
+                            <expression>last(/Test Alert Host/int)&gt;{$INT_UPPER_LIMIT}</expression>
+                            <name>int value exceeds upper limit</name>
+                            <priority>AVERAGE</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+            <macros>
+                <macro>
+                    <macro>{$INT_UPPER_LIMIT}</macro>
+                    <value>100</value>
+                </macro>
+            </macros>
+            <inventory_mode>DISABLED</inventory_mode>
+        </host>
+    </hosts>
+</zabbix_export>
